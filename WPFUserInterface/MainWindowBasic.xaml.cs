@@ -8,11 +8,11 @@ using System.Windows;
 namespace WPFUserInterface;
 
 /// <summary>
-/// Interaction logic for MainWindow.xaml
+/// Interaction logic for MainWindowBasic.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindowBasic : Window
 {
-    public MainWindow() { InitializeComponent(); }
+    public MainWindowBasic() { InitializeComponent(); }
 
     private void executeSync_Click(object sender, RoutedEventArgs e)
     {
