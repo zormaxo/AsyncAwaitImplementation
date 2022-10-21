@@ -11,7 +11,7 @@ namespace WPFUserInterface
     /// </summary>
     public partial class MainWindowAdvanced : Window
     {
-        CancellationTokenSource cts = new CancellationTokenSource();
+        readonly CancellationTokenSource cts = new();
 
         public MainWindowAdvanced() { InitializeComponent(); }
 
@@ -19,8 +19,8 @@ namespace WPFUserInterface
         {
             var watch = Stopwatch.StartNew();
 
-            var results = DemoMethods.RunDownloadSync();
-            //var results = DemoMethods.RunDownloadParallelSync();
+            //var results = DemoMethods.RunDownloadSync();
+            var results = DemoMethods.RunDownloadParallelSync();
             PrintResults(results);
 
             watch.Stop();
@@ -31,38 +31,27 @@ namespace WPFUserInterface
 
         private async void executeAsync_Click(object sender, RoutedEventArgs e)
         {
+            var progress = new Progress<ProgressReportModel>();
+            progress.ProgressChanged += ReportProgress;
+
             var watch = Stopwatch.StartNew();
 
-            var results = await DemoMethods.RunDownloadAsync();
-            PrintResults(results);
+            try
+            {
+                var results = await DemoMethods.RunDownloadAsync(progress, cts.Token);
+                //PrintResults(results);
+            } catch(OperationCanceledException)
+            {
+                resultsWindow.Text += $"The async download was cancelled. {Environment.NewLine}";
+            }
 
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
             resultsWindow.Text += $"Total execution time: {elapsedMs}";
-
-
-            //Progress<ProgressReportModel> progress = new Progress<ProgressReportModel>();
-            //progress.ProgressChanged += ReportProgress;
-
-            //var watch = System.Diagnostics.Stopwatch.StartNew();
-
-            //try
-            //{
-            //    var results = await DemoMethods.RunDownloadAsync(progress, cts.Token);
-            //    PrintResults(results);
-            //} catch(OperationCanceledException)
-            //{
-            //    resultsWindow.Text += $"The async download was cancelled. {Environment.NewLine}";
-            //}
-
-            //watch.Stop();
-            //var elapsedMs = watch.ElapsedMilliseconds;
-
-            //resultsWindow.Text += $"Total execution time: {elapsedMs}";
         }
 
-        private void ReportProgress(object sender, ProgressReportModel e)
+        private void ReportProgress(object? sender, ProgressReportModel e)
         {
             dashboardProgress.Value = e.PercentageComplete;
             PrintResults(e.SitesDownloaded);
@@ -70,28 +59,19 @@ namespace WPFUserInterface
 
         private async void executeParallelAsync_Click(object sender, RoutedEventArgs e)
         {
+            Progress<ProgressReportModel> progress = new Progress<ProgressReportModel>();
+            progress.ProgressChanged += ReportProgress;
+
             var watch = Stopwatch.StartNew();
 
-            var results = await DemoMethods.RunDownloadParallelAsync();
-            PrintResults(results);
+            //var results = await DemoMethods.RunDownloadParallelAsync();
+            var results = await DemoMethods.RunDownloadParallelAsyncV2(progress);
+            //PrintResults(results);
 
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
             resultsWindow.Text += $"Total execution time: {elapsedMs}";
-
-            //Progress<ProgressReportModel> progress = new Progress<ProgressReportModel>();
-            //progress.ProgressChanged += ReportProgress;
-
-            //var watch = System.Diagnostics.Stopwatch.StartNew();
-
-            //var results = await DemoMethods.RunDownloadParallelAsyncV2(progress);
-            //PrintResults(results);
-
-            //watch.Stop();
-            //var elapsedMs = watch.ElapsedMilliseconds;
-
-            //resultsWindow.Text += $"Total execution time: {elapsedMs}";
         }
 
         private void cancelOperation_Click(object sender, RoutedEventArgs e) { cts.Cancel(); }
